@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MatPortal | Doküman Odası</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+	<link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-gray-50 font-sans">
+<div id="globalNavbar"></div>
+    
+
+    <main class="max-w-4xl mx-auto px-4 py-12">
+        <div class="bg-white rounded-xl shadow-sm border p-8">
+            
+            <h1 id="sayfaBasligi" class="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                <i class="fa-solid fa-folder-open text-amber-500"></i> Doküman Kürsüsü
+            </h1>
+            
+            <div id="dokumanListesiContainer" class="space-y-4">
+                <div class="text-center py-8 text-gray-400">
+                    <i class="fa-solid fa-spinner fa-spin text-2xl mb-2"></i>
+                    <p class="text-xs">Dokümanlar havuzdan çekiliyor...</p>
+                </div>
+            </div>
+
+        </div>
+    </main>
+<script src="navbar.js"></script>
+    <script type="module">
+        // firebase-config.js dosyanızın doğru dizinde olduğundan emin olun
+        import { db, ref, onValue } from "./firebase-config.js";
+
+        // 1. URL parametresinden hangi sınıfın seçildiğini oku (?sinif=8 veya ?sinif=ogretmen gibi)
+        const urlParams = new URLSearchParams(window.location.search);
+        const secilenSinif = urlParams.get('sinif') || 'ogretmen'; // Parametre yoksa default öğretmen evraklarını açar
+
+        const baslikAlan = document.getElementById('sayfaBasligi');
+        const container = document.getElementById('dokumanListesiContainer');
+
+        // 2. Sayfa Başlığını Seçilen Sınıfa Göre Güncelle
+        if (secilenSinif === 'ogretmen') {
+            baslikAlan.innerHTML = `<i class="fa-solid fa-folder-open text-amber-500"></i> Öğretmen Kürsüsü & Evrak Odası`;
+        } else {
+            baslikAlan.innerHTML = `<i class="fa-solid fa-folder-open text-indigo-500"></i> ${secilenSinif}. Sınıf Matematik Dokümanları`;
+        }
+
+        // 3. Dosya Uzantısına Göre Şık İkon Belirleyen Yardımcı Fonksiyon
+        function ikonBul(dosyaAdi) {
+            if (!dosyaAdi) return 'fa-regular fa-file-lines text-slate-500';
+            const uzanti = dosyaAdi.split('.').pop().toLowerCase();
+            if (['pdf'].includes(uzanti)) return 'fa-regular fa-file-pdf text-red-600';
+            if (['doc', 'docx'].includes(uzanti)) return 'fa-regular fa-file-word text-blue-600';
+            if (['xls', 'xlsx'].includes(uzanti)) return 'fa-regular fa-file-excel text-emerald-600';
+            if (['ppt', 'pptx'].includes(uzanti)) return 'fa-regular fa-file-powerpoint text-orange-600';
+            if (['jpg', 'jpeg', 'png', 'webp'].includes(uzanti)) return 'fa-regular fa-file-image text-purple-600';
+            return 'fa-regular fa-file text-indigo-600';
+        }
+
+        // 4. Firebase Veritabanından Canlı Verileri Çek ve Filtrele
+        onValue(ref(db, 'icerikler'), (snapshot) => {
+            container.innerHTML = ""; // Yükleniyor yazısını ve eski içeriği temizle
+            const veriler = snapshot.val();
+
+            // Eğer veritabanında "icerikler" düğümü tamamen boşsa direkt boş uyarısı ver
+            if (!veriler) {
+                bosDurumUyarisiYaz();
+                return;
+            }
+
+            let dosyaBulunduMu = false;
+
+            // Verileri döngüye al
+            Object.keys(veriler).forEach(key => {
+                const dokuman = veriler[key];
+
+                // Admin panelinden kaydedilen sınıf verisi ile URL'deki parametre eşleşiyor mu?
+                if (dokuman.sinif === secilenSinif) {
+                    dosyaBulunduMu = true;
+                    
+                    const dinamikIkon = ikonBul(dokuman.dosyaAdi);
+                    
+                    // Şık doküman kartı tasarımı
+                    container.innerHTML += `
+                        <div class="flex items-center justify-between p-4 border rounded-lg hover:bg-slate-50 transition shadow-sm bg-white">
+                            <div class="flex items-center gap-3 truncate mr-4">
+                                <i class="${dinamikIkon} text-2xl flex-shrink-0"></i>
+                                <div class="truncate">
+                                    <p class="font-semibold text-gray-800 text-sm truncate">${dokuman.baslik}</p>
+                                    <p class="text-[11px] text-gray-400 truncate">${dokuman.detay || 'Ek açıklama bulunmuyor.'} ${dokuman.dosyaAdi ? '• ' + dokuman.dosyaAdi : ''}</p>
+                                </div>
+                            </div>
+                            <a href="${dokuman.dosya}" download="${dokuman.dosyaAdi || 'dokuman'}" class="bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1 flex-shrink-0">
+                                <i class="fa-solid fa-download"></i> İndir
+                            </a>
+                        </div>
+                    `;
+                }
+            });
+
+            // 5. EĞER O SINIFIN ALTINDA HİÇ DOSYA BULUNAMADIYSA BU BLOK ÇALIŞIR
+            if (!dosyaBulunduMu) {
+                bosDurumUyarisiYaz();
+            }
+        });
+
+        // "Henüz dosya eklenmedi" uyarısını basan arayüz fonksiyonu
+        function bosDurumUyarisiYaz() {
+            container.innerHTML = `
+                <div class="text-center py-12 bg-slate-50 rounded-xl border border-dashed border-slate-300 p-6">
+                    <i class="fa-solid fa-box-open text-slate-300 text-4xl mb-3 block"></i>
+                    <h3 class="text-sm font-bold text-slate-700">Henüz Dosya Eklenmedi</h3>
+                    <p class="text-xs text-slate-400 mt-1">Bu alana ait dokümanlar ve yeni nesil materyaller yakında Kontrol Kürsüsü üzerinden sisteme yüklenecektir.</p>
+                </div>
+            `;
+        }
+    </script>
+
+</body>
+</html>

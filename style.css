@@ -1,0 +1,17 @@
+/* İki Aşamalı Dropdown Hover Mekanizması */
+.dropdown:hover > .dropdown-menu {
+    display: block;
+}
+
+.submenu:hover > .submenu-menu {
+    display: block;
+}
+
+/* Slider Aktiflik CSS'i */
+.slider-slide {
+    display: none;
+    transition: opacity 0.5s ease-in-out;
+}
+.slider-slide.active {
+    display: block;
+}

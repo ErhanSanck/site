@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MatPortal | Matematik Eğitim Platformu</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-slate-50 font-sans flex flex-col min-h-screen text-slate-800">
+
+    <div id="globalNavbar"></div>
+
+    <div id="sliderContainer" class="relative w-full h-[360px] bg-slate-900 overflow-hidden shadow-sm">
+        <div id="sliderYukleniyor" class="w-full h-full flex items-center justify-center text-white text-sm italic">
+            <i class="fa-solid fa-circle-notch animate-spin mr-2"></i> Slaytlar yükleniyor...
+        </div>
+        
+        <button onclick="degistirSlide(-1)" class="absolute left-4 top-1/2 -translate-y-1/2 bg-black/30 hover:bg-black/50 text-white w-10 h-10 rounded-full flex items-center justify-center transition z-10"><i class="fa-solid fa-chevron-left"></i></button>
+        <button onclick="degistirSlide(1)" class="absolute right-4 top-1/2 -translate-y-1/2 bg-black/30 hover:bg-black/50 text-white w-10 h-10 rounded-full flex items-center justify-center transition z-10"><i class="fa-solid fa-chevron-right"></i></button>
+    </div>
+
+    <main class="max-w-7xl mx-auto px-4 py-12 flex-grow w-full grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div class="lg:col-span-2 space-y-6">
+            <div class="bg-white rounded-xl shadow-xs border border-gray-200 p-6">
+                <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2 border-b pb-2">
+                    <i class="fa-solid fa-cloud-arrow-up text-indigo-600"></i> Son Eklenen Dökümanlar
+                </h2>
+                <div id="canliDosyaListesi" class="space-y-4"></div>
+            </div>
+        </div>
+
+        <div class="space-y-6">
+            <div class="bg-white rounded-xl shadow-xs border border-gray-200 p-6">
+                <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2 border-b pb-2">
+                    <i class="fa-solid fa-bullhorn text-emerald-600"></i> Güncel Duyurular
+                </h2>
+                <div id="canliDuyuruListesi" class="space-y-3"></div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-slate-900 text-slate-400 py-6 text-center text-sm border-t border-slate-800 mt-auto">
+        <p>&copy; 2026 MatPortal Matematik Geliştirme Platformu</p>
+    </footer>
+
+    <script src="navbar.js"></script>
+
+    <script type="module">
+        import { db, ref, onValue } from "./firebase-config.js";
+		
+        // --- 1. SLIDER VERİLERİ ---
+        onValue(ref(db, 'slider'), (snapshot) => {
+            const data = snapshot.val();
+            const container = document.getElementById('sliderContainer');
+            if(!data) return;
+
+            container.innerHTML = `
+                <button onclick="degistirSlide(-1)" class="absolute left-4 top-1/2 -translate-y-1/2 bg-black/30 hover:bg-black/50 text-white w-10 h-10 rounded-full flex items-center justify-center transition z-10"><i class="fa-solid fa-chevron-left"></i></button>
+                <button onclick="degistirSlide(1)" class="absolute right-4 top-1/2 -translate-y-1/2 bg-black/30 hover:bg-black/50 text-white w-10 h-10 rounded-full flex items-center justify-center transition z-10"><i class="fa-solid fa-chevron-right"></i></button>
+            `;
+
+            Object.keys(data).forEach((key, index) => {
+                const slide = data[key];
+                const aktifClass = index === 0 ? 'active' : '';
+                const bgGorsel = slide.detayResim ? slide.detayResim : slide.resimYolu;
+			window.sinifaYonlendir = function(sinif) {
+    // Kullanıcıyı dokümanlar sayfasına hangi sınıfı seçtiği bilgisiyle (Query Param) gönderiyoruz
+    window.location.href = `dokumanlar.html?sinif=${sinif}`;
+};
+                container.innerHTML += `
+                    <div onclick="location.href='detay.html?tip=slider&id=${key}'" class="slider-slide ${aktifClass} w-full h-full cursor-pointer relative">
+                        <img src="${bgGorsel}" class="w-full h-full object-cover absolute inset-0">
+                        <div class="absolute inset-0 bg-gradient-to-r from-slate-950/80 via-slate-900/50 to-transparent flex items-center px-12">
+                            <div class="max-w-xl space-y-3 z-10">
+                                <span class="bg-indigo-600 text-white text-[10px] uppercase font-bold tracking-wider px-2.5 py-1 rounded-md">Öne Çıkan İçerik</span>
+                                <h2 class="text-3xl font-black text-white drop-shadow-md">${slide.detayBaslik}</h2>
+                                <p class="text-slate-200 text-xs line-clamp-2 drop-shadow-xs">${slide.detayMetni}</p>
+                            </div>
+                        </div>
+                    </div>`;
+            });
+            window.initSlider();
+        });
+
+        // --- 2. DUYURU MOTORU ---
+        onValue(ref(db, 'duyurular'), (snapshot) => {
+            const data = snapshot.val();
+            const container = document.getElementById('canliDuyuruListesi');
+            if(!data) {
+                container.innerHTML = `<p class="text-xs text-gray-400 italic">Şu an aktif bir duyuru bulunmuyor.</p>`;
+                return;
+            }
+            container.innerHTML = "";
+            Object.keys(data).reverse().forEach(key => {
+                const duyuru = data[key];
+                container.innerHTML += `
+                    <div onclick="location.href='detay.html?tip=duyuru&id=${key}'" class="p-3 bg-amber-50/70 hover:bg-amber-100/80 border-l-4 border-amber-500 text-xs text-gray-700 rounded-r cursor-pointer transition shadow-2xs flex flex-col gap-1">
+                        <h4 class="font-bold text-slate-900 flex items-center justify-between">
+                            <span>${duyuru.baslik}</span>
+                            <i class="fa-solid fa-arrow-right text-[10px] text-amber-600"></i>
+                        </h4>
+                        <p class="text-gray-600 line-clamp-2">${duyuru.aciklama}</p>
+                    </div>`;
+            });
+        });
+
+        // --- 3. SON DÖKÜMANLAR ---
+        onValue(ref(db, 'icerikler'), (snapshot) => {
+            const data = snapshot.val();
+            const container = document.getElementById('canliDosyaListesi');
+            if(!data) {
+                container.innerHTML = `<p class="text-sm text-gray-400 italic">Henüz döküman yüklenmedi.</p>`;
+                return;
+            }
+            container.innerHTML = "";
+            Object.keys(data).slice(-4).reverse().forEach(key => {
+                const item = data[key];
+                const sinifEtiket = item.sinif === 'ogretmen' ? 'Öğretmen' : `${item.sinif}. Sınıf`;
+                const turEtiket = item.tur === 'anlatim' ? 'Konu Anlatımı' : 'Yaprak Test';
+                
+                container.innerHTML += `
+                    <div class="p-4 bg-white border border-slate-100 rounded-xl flex justify-between items-center hover:bg-indigo-50/50 transition">
+                        <div>
+                            <div class="flex gap-1.5">
+                                <span class="text-[10px] font-bold text-indigo-600 bg-indigo-100/70 px-2 py-0.5 rounded-md">${sinifEtiket}</span>
+                                <span class="text-[10px] font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-md">${turEtiket}</span>
+                            </div>
+                            <h3 class="font-bold text-gray-800 text-sm mt-1.5">${item.baslik}</h3>
+                        </div>
+                        <button onclick="alert('Dosya indirme fonksiyonu tetiklendi!')" class="text-xs bg-white text-indigo-600 border border-indigo-200 shadow-2xs px-3 py-1.5 rounded-lg font-semibold hover:bg-indigo-600 hover:text-white transition flex items-center gap-1">
+                            <i class="fa-solid fa-download"></i> İndir
+                        </button>
+                    </div>`;
+            });
+        });
+    </script>
+
+    <script>
+        let aktifSlideIndex = 0;
+        window.initSlider = function() {
+            window.slaytlar = document.querySelectorAll('.slider-slide');
+            aktifSlideIndex = 0;
+        }
+        function gosterSlide(index) {
+            if(!window.slaytlar || window.slaytlar.length === 0) return;
+            window.slaytlar.forEach(s => s.classList.remove('active'));
+            if(index >= window.slaytlar.length) aktifSlideIndex = 0;
+            else if(index < 0) aktifSlideIndex = window.slaytlar.length - 1;
+            else aktifSlideIndex = index;
+            window.slaytlar[aktifSlideIndex].classList.add('active');
+        }
+        function degistirSlide(yon) { gosterSlide(aktifSlideIndex + yon); }
+        setInterval(() => { degistirSlide(1); }, 7000);
+    </script>
+</body>
+</html>

@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MatPortal | Kontrol Kürsüsü</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+	<script type="module" src="admin.js"></script>
+</head>
+<body class="bg-slate-100 font-sans min-h-screen flex">
+
+    <aside class="w-64 bg-slate-900 text-slate-300 flex flex-col">
+        <div class="p-5 text-lg font-black text-white border-b border-slate-800 flex items-center gap-2">
+            <i class="fa-solid fa-cloud-bolt text-indigo-400"></i> MatPortal Panel
+        </div>
+        <nav class="flex-grow p-4 space-y-2 text-sm">
+            <button onclick="sekmeDegistir('icerik')" class="w-full text-left block py-2.5 px-4 rounded hover:bg-slate-800 text-white transition flex items-center gap-2">
+                <i class="fa-solid fa-folder-open"></i> İçerik & Duyuru Yönetimi
+            </button>
+            <button onclick="sekmeDegistir('slider')" class="w-full text-left block py-2.5 px-4 rounded hover:bg-slate-800 text-white transition flex items-center gap-2">
+                <i class="fa-solid fa-images"></i> Slider Yönetimi
+            </button>
+            <div class="border-t border-slate-800 my-4"></div>
+            <a href="index.html" class="block py-2 px-4 rounded hover:bg-slate-800 transition flex items-center gap-2"><i class="fa-solid fa-home"></i> Ana Portala Dön</a>
+        </nav>
+    </aside>
+
+    <main class="flex-grow p-6 md:p-10 max-w-6xl mx-auto w-full">
+        
+        <div id="mainIcerikAlani" class="space-y-8">
+            <div class="border-b pb-4"><h1 class="text-3xl font-black text-slate-800">İçerik Kontrol Kürsüsü</h1></div>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                
+                <div class="bg-white p-6 rounded-2xl shadow-sm border space-y-4">
+                    <div id="duzenlemePaneliRozeti" class="hidden bg-amber-50 text-amber-800 border border-amber-200 text-[11px] p-2.5 rounded-xl font-semibold"></div>
+                    <h2 class="text-sm font-bold text-gray-800 border-b pb-2"><i class="fa-solid fa-file-shield text-indigo-600"></i> Dosya Dağıtım Formu</h2>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <select id="kademe" class="w-full p-2 border rounded-xl bg-gray-50 text-xs">
+                                <option value="ortaokul">Ortaokul (LGS)</option>
+                                <option value="lise">Lise (YKS)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <select id="sinif" class="w-full p-2 border rounded-xl bg-gray-50 text-xs">
+                                <option value="5">5. Sınıf</option><option value="6">6. Soring</option><option value="7">7. Sınıf</option><option value="8">8. Sınıf</option>
+                                <option value="9">9. Sınıf</option><option value="10">10. Sınıf</option><option value="11">11. Sınıf</option><option value="12">12. Sınıf</option>
+                                <option value="ogretmen">Öğretmen Dokümanı</option>
+                            </select>
+                        </div>
+                    </div>
+                    <select id="tur" class="w-full p-2 border rounded-xl bg-gray-50 text-xs">
+                        <option value="anlatim">Konu Anlatımı</option>
+                        <option value="test">Yaprak Test</option>
+                    </select>
+                    <input type="text" id="baslik" placeholder="Başlık" class="w-full p-2 border rounded-xl text-xs">
+                    <textarea id="detay" rows="2" placeholder="Açıklama Notu..." class="w-full p-2 border rounded-xl text-xs"></textarea>
+                    <input type="file" id="dosyaYukle" class="w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:bg-indigo-50 file:text-indigo-700">
+                    <div class="flex gap-2">
+                        <button id="formButon" onclick="sistemeIcerikKaydet()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl text-xs transition">Buluta Ekle</button>
+                        <button onclick="duzenlemeIptalEt()" class="bg-gray-200 text-gray-700 font-bold px-4 rounded-xl text-xs">Sıfırla</button>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-2xl shadow-sm border space-y-4">
+                    <h2 class="text-sm font-bold text-gray-800 border-b pb-2"><i class="fa-solid fa-bullhorn text-emerald-600"></i> Canlı Vitrin Duyurusu</h2>
+                    <input type="text" id="duyuruBaslik" placeholder="Duyuru Başlığı" class="w-full p-2 border rounded-xl text-xs">
+                    <textarea id="duyuruAciklama" rows="3" placeholder="Açıklama..." class="w-full p-2 border rounded-xl text-xs"></textarea>
+                    <input type="file" id="duyuruResim" accept="image/*" class="w-full text-xs file:bg-emerald-50 file:text-emerald-700 file:rounded-xl file:border-0">
+                    <button onclick="duyuruEkle()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl text-xs transition">Panoya Gönder</button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-white p-4 rounded-2xl border"><h3 class="font-bold text-xs mb-2">Yayındaki Dosyalar</h3><div id="adminListe" class="space-y-1"></div></div>
+                <div class="bg-white p-4 rounded-2xl border"><h3 class="font-bold text-xs mb-2">Yayındaki Duyurular</h3><div id="adminDuyuruListe" class="space-y-1"></div></div>
+            </div>
+        </div>
+
+        <div id="mainSliderAlani" class="space-y-8 hidden">
+            <div class="border-b pb-4"><h1 class="text-3xl font-black text-slate-800">Slider & Özel Sayfa Üreticisi</h1></div>
+            
+            <div class="bg-white p-6 rounded-2xl shadow-sm border max-w-2xl space-y-4">
+                <div>
+                    <label class="block text-[11px] font-bold text-gray-500 uppercase mb-1">Düzenlenecek Slayt Seçimi</label>
+                    <select id="slideSecici" onchange="sliderVerisiYukle()" class="w-full p-2.5 border rounded-xl bg-slate-50 font-bold text-xs text-indigo-700">
+                        <option value="slide1">Slide 1 (İlk Slayt Görseli)</option>
+                        <option value="slide2">Slide 2 (İkinci Slayt Görseli)</option>
+                        <option value="slide3">Slide 3 (Üçüncü Slayt Görseli)</option>
+                    </select>
+                </div> 
+
+                <div>
+                    <label class="block text-[11px] font-bold text-gray-500 uppercase mb-1">Lokal Slayt Görsel Yolu (slides klasöründeki)</label>
+                    <input type="text" id="slideResimYolu" placeholder="Örn: slides/slide1.jpg" class="w-full p-2 border rounded-xl text-xs bg-gray-50">
+                    <p class="text-[10px] text-gray-400 mt-1">* Önemli: Eğer bu yolu değiştirip kaydederseniz, alt taraftaki sayfa detayları otomatik sıfırlanır.</p>
+                </div>
+
+                <div class="border-t pt-4 bg-indigo-50/30 p-4 rounded-xl space-y-3">
+                    <h3 class="text-xs font-bold text-indigo-900 flex items-center gap-1"><i class="fa-solid fa-file-invoice"></i> Slayta Tıklanınca Açılacak Sayfa Bilgileri</h3>
+                    
+                    <div>
+                        <label class="block text-[10px] font-bold text-gray-500 mb-1">Detay Sayfası Başlığı</label>
+                        <input type="text" id="slideDetayBaslik" placeholder="Slayt Detay Sayfası Ana Başlığı" class="w-full p-2 border rounded-xl text-xs bg-white">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-gray-500 mb-1">Detay Sayfası Açıklama Metni</label>
+                        <textarea id="slideDetayMetni" rows="4" placeholder="Sayfa içerisinde yer alacak detaylı içerik alanı..." class="w-full p-2 border rounded-xl text-xs bg-white"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-gray-500 mb-1">Detay Sayfası İç Görseli (Yalnızca JPG)</label>
+                        <input type="file" id="slideDetayResim" accept=".jpg, .jpeg" class="w-full text-xs text-slate-500 file:mr-4 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:bg-indigo-100 file:text-indigo-800">
+                        <img id="slideMevcutResimOnizleme" src="" class="hidden w-32 h-20 object-cover mt-2 rounded border shadow-sm">
+                    </div>
+                </div>
+
+                <button onclick="sliderKaydet()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-black py-3 rounded-xl text-xs transition shadow-md flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-floppy-disk"></i> Slayt ve Sayfa Verisini Buluta İşle
+                </button>
+            </div>
+        </div>
+    </main>
+</body>
+</html>

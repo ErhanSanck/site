@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MatPortal | Doküman Havuzu</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-slate-50 min-h-screen flex flex-col justify-between">
+
+    <nav class="bg-white shadow px-6 py-4 flex justify-between items-center sticky top-0 z-50">
+        <a href="index.html" class="text-indigo-600 font-bold text-sm flex items-center gap-1"><i class="fa-solid fa-arrow-left"></i> Portala Dön</a>
+        <span id="sayfaUstBaslik" class="text-xs font-bold text-slate-600 bg-slate-100 px-2.5 py-1 rounded-full">Yükleniyor...</span>
+    </nav>
+
+    <main class="max-w-4xl mx-auto px-4 py-8 w-full flex-grow space-y-4">
+        <div class="bg-white p-5 rounded-2xl border shadow-sm flex justify-between items-center">
+            <div>
+                <h1 id="kategoriBasligi" class="text-xl font-black text-slate-800">Veriler İşleniyor...</h1>
+                <p class="text-xs text-gray-400 mt-0.5">Bulut veritabanından filtrelenmiş canlı materyal listesi.</p>
+            </div>
+            <div id="istatistikRozeti" class="text-[11px] font-bold bg-indigo-50 text-indigo-700 px-2.5 py-1 rounded-lg border border-indigo-100">0 İçerik</div>
+        </div>
+
+        <div id="yukleyici" class="text-center py-16 text-slate-400 text-xs font-semibold">
+            <i class="fa-solid fa-spinner animate-spin text-xl text-indigo-600 mb-2 block mx-auto"></i> Süzgeç çalıştırılıyor...
+        </div>
+
+        <div id="listeKart" class="hidden bg-white rounded-2xl border shadow-sm overflow-hidden">
+            <table class="w-full text-left border-collapse text-xs">
+                <thead>
+                    <tr class="bg-slate-900 text-slate-300 font-bold uppercase">
+                        <th class="p-3">Materyal Adı</th>
+                        <th class="p-3 text-center">Eylem</th>
+                    </tr>
+                </thead>
+                <tbody id="kategoriTabloGövde" class="divide-y text-slate-700"></tbody>
+            </table>
+            <div id="bosUyarisi" class="hidden text-center py-12 text-gray-400 font-medium">Kayıtlı dosya bulunamadı.</div>
+        </div>
+    </main>
+
+    <footer class="bg-slate-900 text-slate-500 py-3 text-center text-[11px] border-t border-slate-800">&copy; 2026 MatPortal Filter Matrix</footer>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBkCma7jbfyqzzSNdYKsLLT1WbZbMrIpxs",
+            authDomain: "enesogrenci-91325.firebaseapp.com",
+            databaseURL: "https://enesogrenci-91325-default-rtdb.firebaseio.com",
+            projectId: "enesogrenci-91325",
+            storageBucket: "enesogrenci-91325.firebasestorage.app",
+            messagingSenderId: "364088274010",
+            appId: "1:364088274010:web:98dc1daac0d094246cbc63",
+            measurementId: "G-VSCX9PWJSM"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlSinif = urlParams.get('sinif');
+        const urlTur = urlParams.get('tur');
+
+        const sinifText = urlSinif === 'ogretmen' ? 'Öğretmen Evrak Odası' : `${urlSinif}. Sınıf`;
+        const turText = urlTur === 'anlatim' ? 'Konu Anlatımları' : 'Yaprak Testler';
+
+        document.getElementById('kategoriBasligi').innerText = `${sinifText} - ${turText}`;
+        document.getElementById('sayfaUstBaslik').innerText = `${sinifText} / ${turText}`;
+
+        onValue(ref(db, 'icerikler'), (snapshot) => {
+            document.getElementById('yukleyici').classList.add('hidden');
+            document.getElementById('listeKart').classList.remove('hidden');
+
+            const tablo = document.getElementById('kategoriTabloGövde');
+            tablo.innerHTML = "";
+            const data = snapshot.val();
+            let sayac = 0;
+
+            if(data) {
+                Object.keys(data).forEach(key => {
+                    const item = data[key];
+                    if(item.sinif === urlSinif && item.tur === urlTur) {
+                        sayac++;
+                        tablo.innerHTML += `
+                            <tr class="hover:bg-slate-50 transition">
+                                <td class="p-3 font-bold text-slate-800"><i class="fa-regular fa-file-pdf text-red-500 mr-1.5"></i> ${item.baslik}</td>
+                                <td class="p-3 text-center"><a href="icerik-detay.html?id=${key}" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-3 py-1 rounded-md transition">Aç / İndir</a></td>
+                            </tr>`;
+                    }
+                });
+            }
+            document.getElementById('istatistikRozeti').innerText = `${sayac} İçerik Bulundu`;
+            document.getElementById('bosUyarisi').classList.toggle('hidden', sayac > 0);
+        });
+    </script>
+</body>
+</html>

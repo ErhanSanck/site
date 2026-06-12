@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MatPortal | Slayt Özel İçeriği</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-slate-50 font-sans flex flex-col min-h-screen">
+
+    <nav class="bg-white shadow-sm border-b py-4">
+        <div class="max-w-4xl mx-auto px-4 flex justify-between items-center">
+            <a href="index.html" class="text-xl font-black text-indigo-600"><i class="fa-solid fa-calculator"></i> MatPortal</a>
+            <a href="index.html" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-3 py-1.5 rounded-lg transition"><i class="fa-solid fa-arrow-left"></i> Ana Sayfaya Dön</a>
+        </div>
+    </nav>
+
+    <main class="max-w-4xl mx-auto px-4 py-10 flex-grow w-full">
+        <div class="bg-white rounded-2xl border shadow-sm p-6 md:p-8 space-y-6">
+            
+            <h1 id="detayBaslik" class="text-2xl md:text-3xl font-black text-slate-800 tracking-tight animate-pulse bg-slate-200 h-8 rounded w-3/4"></h1>
+            
+            <div id="detayResimKonteyner" class="hidden">
+                <img id="detayResim" src="" class="w-full max-h-[400px] object-cover rounded-xl shadow-sm border">
+            </div>
+
+            <p id="detayMetni" class="text-slate-600 text-sm md:text-base leading-relaxed whitespace-pre-line"></p>
+        </div>
+    </main>
+
+    <footer class="bg-slate-900 text-slate-400 py-4 text-center text-xs"><p>&copy; 2026 MatPortal Network</p></footer>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBkCma7jbfyqzzSNdYKsLLT1WbZbMrIpxs",
+            authDomain: "enesogrenci-91325.firebaseapp.com",
+            databaseURL: "https://enesogrenci-91325-default-rtdb.firebaseio.com",
+            projectId: "enesogrenci-91325",
+            storageBucket: "enesogrenci-91325.firebasestorage.app",
+            messagingSenderId: "364088274010",
+            appId: "1:364088274010:web:98dc1daac0d094246cbc63"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        // URL'den hangi slaydın tıklandığını yakala (?slideId=slide1 gibi)
+        const urlParams = new URLSearchParams(window.location.search);
+        const slideId = urlParams.get('slideId');
+
+        if(slideId) {
+            get(ref(db, `slider/${slideId}`)).then((snapshot) => {
+                const veri = snapshot.val();
+                
+                const baslikEl = document.getElementById('detayBaslik');
+                baslikEl.classList.remove('animate-pulse', 'bg-slate-200', 'h-8');
+
+                if(veri) {
+                    baslikEl.innerText = veri.detayBaslik || "Başlık Belirtilmemiş";
+                    document.getElementById('detayMetni').innerText = veri.detayMetni || "Açıklama girilmemiş.";
+                    
+                    if(veri.detayResim) {
+                        document.getElementById('detayResim').src = veri.detayResim;
+                        document.getElementById('detayResimKonteyner').classList.remove('hidden');
+                    }
+                } else {
+                    baslikEl.innerText = "İçerik Bulunamadı";
+                    document.getElementById('detayMetni').innerText = "Bu slayda ait özel bir detay sayfası henüz oluşturulmamış.";
+                }
+            }).catch(() => {
+                document.getElementById('detayBaslik').innerText = "Veritabanı Bağlantı Hatası";
+            });
+        }
+    </script>
+</body>
+</html>
